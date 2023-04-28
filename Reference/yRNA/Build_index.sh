@@ -1,0 +1,1 @@
+bowtie2-build --threads 10 Homo_yRNA.fa Homo_yRNA

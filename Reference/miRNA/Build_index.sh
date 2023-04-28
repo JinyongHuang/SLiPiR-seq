@@ -1,0 +1,1 @@
+bowtie2-build --threads 10 hsa_miRNAs.fa hsa_miRNAs

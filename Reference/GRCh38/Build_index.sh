@@ -1,0 +1,1 @@
+bowtie2-build --threads 10 hg38.fa hg38
