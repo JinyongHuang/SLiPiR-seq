@@ -12,7 +12,7 @@ R packages:  tidyverse (version 2.0.0); ggpubr (version 0.6.0); ggplot2 (version
 3.	Read calling for nine RNA categories.\
 ```./Data processing/3. RNA read count calling.sh```
 4.	Generating quality control summary for all samples on the read count matrices.\
-```Rscript ./Data analysis - clinical/1. Raw read counts/Raw read counts.R ```
+```Rscript ./Data analysis - clinical/1. Raw read counts/Raw read counts.R ```\
 ```Rscript ./Data analysis - clinical/2. Quality control/Quality control.R ```
 5.	Normalization of sequencing reads.\
 ```Rscript ./Data analysis - clinical/3. Normalization_RPM_colsum/Normalization -  RPM - colsum.R ```
