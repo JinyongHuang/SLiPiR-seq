@@ -18,7 +18,7 @@ R packages:  tidyverse (version 2.0.0); ggpubr (version 0.6.0); ggplot2 (version
 5.	Case and control study – One cancer type\
 Differential expression analysis:\
 ```Rscript ./Data analysis/2.Lung cancer/1.DE/1.DE_LC_SZDE_vs_NOR_SZBA.R```\
-```Rscript ./Data analysis/2.Lung cancer/1.DE/2.Candidates_reads_boxplot.R```
+```Rscript ./Data analysis/2.Lung cancer/1.DE/2.Candidates_reads_boxplot.R```\
 Feature selection:\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/1.Feature selection-Boruta.R```\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/1.Feature selection-LASSO.R```\
@@ -28,5 +28,8 @@ Machine learning analysis:\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2. ROC single.R```\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2. goi_reads_boxplot.R```\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/3. Combination test.R```\
-```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/4. Best combination.R```\
+```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/4. Best combination.R```
+6.	Case and control study – Multiple cancer types.\
+Same as above.
+
 
