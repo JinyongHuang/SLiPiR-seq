@@ -24,11 +24,11 @@ Feature selection:\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/1.Feature selection-LASSO.R```\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/1.Feature selection-TopN.R```\
 Machine learning analysis:\
-```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2. AUC single RNA.R```\
-```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2. ROC single.R```\
-```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2. goi_reads_boxplot.R```\
-```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/3. Combination test.R```\
-```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/4. Best combination.R```
+```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2.AUC single RNA.R```\
+```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2.ROC single.R```\
+```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/2.goi_reads_boxplot.R```\
+```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/3.Combination test.R```\
+```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/4.Best combination.R```
 6.	Case and control study – Multiple cancer types.\
 Same as above.
 
