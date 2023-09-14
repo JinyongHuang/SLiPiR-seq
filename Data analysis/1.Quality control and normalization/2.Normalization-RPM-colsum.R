@@ -5,7 +5,7 @@ library(gtools)
 library(ggplot2)
 library(ggpubr)
 ####meta----
-meta<-read.csv("../Metadata/Meta_with_clinical_and_Summary_used_samples_20230829.csv", header = T, row.names = 1)
+meta<-read.csv("../Metadata/Meta_with_clinical_and_Summary_used_samples.csv", header = T, row.names = 1)
 table(meta$sample_type)
 meta<-meta[OrderMixed(meta$ID),]
 ####RNA matrix----
