@@ -9,6 +9,7 @@ library(reshape2)
 library(ggplot2)
 library(ggpubr)
 library(Rtsne)
+library(DescTools)
 library(foreach)#multi-core to save time
 library(doParallel)#multi-core to save time
 library(RColorBrewer)
@@ -35,13 +36,14 @@ vali_type<-factor(c(vali_1$group,vali_2$group),levels = c("Healthy","Lung_cancer
 nvalidation<-length(vali_ID)
 
 ####goi----
-goi_msRNA<-readLines("../LASSO/goi/20/msRNA name.txt")
-goi_miRNA<-readLines("../Boruta/goi/20/miRNA name.txt")
-goi_snoRNA<-readLines("../TopN/goi/snoRNA Top N selected name.txt")
-goi_tsRNA<-readLines("../LASSO/goi/20/tsRNA name.txt")
+#goi_mRNA<-readLines("../LASSO_10/goi/mRNA name.txt")
+goi_miRNA<-readLines("../LASSO_10/goi/miRNA name.txt")
+goi_snRNA<-readLines("../LASSO_10/goi/snRNA name.txt")
+goi_snoRNA<-readLines("../LASSO_10/goi/snoRNA name.txt")
+#goi_tsRNA<-readLines("../LASSO_10/goi/tsRNA name.txt")
 
-goi<-c(goi_msRNA,goi_miRNA,goi_snoRNA,goi_tsRNA)
-selected="ms+mi+sno+ts"
+goi<-c(goi_miRNA,goi_snRNA,goi_snoRNA)
+selected="mi+sn+sno"
 ####Data for machine learning----
 AllRNA<-read.table("../../../Normalization_RPM_colsum/cfRNA-log2(cpm).txt", header = T, row.names = 1)
 AllRNA<-AllRNA[goi,meta$ID]
@@ -211,21 +213,6 @@ Best<-data.frame(rbind(LR_df,RF_df,SVM_df))
 
 summary(LR_df[,"AUC_testing"])
 summary(LR_df[,"AUC_validation"])
-# summary(RF_df[,"AUC_testing"])
-# summary(RF_df[,"AUC_validation"])
-# summary(SVM_df[,"AUC_testing"])
-# summary(SVM_df[,"AUC_validation"])
-
-df<-Best[,c(5,6,10)]
-df<-melt(df,"method")
-df$variable<-factor(c(rep("Testing",300),rep("Validation",300)),levels = c("Testing","Validation"))
-ggplot(df, aes(x=variable, y= value,colour=variable))+geom_boxplot(outlier.shape = NA)+  geom_jitter(shape=16, position=position_jitter(0.2)) + facet_wrap(~method, scale="free")+
-  labs(x="", y = "AUC in 100 iterations")+ theme_classic()+scale_colour_brewer(palette="Set1")+
-  theme(axis.text.y = element_text(colour = "black",size = 14), axis.text.x = element_text(colour = "black",size = 14),
-        strip.text.x = element_text(colour = "black",size = 14,face = "bold"), legend.position = "none", 
-        axis.title = element_text(size = 16), plot.title = element_text(size = 16,hjust = 0.5,face = "bold"), panel.border = element_rect(colour = "black", fill=NA, size=1))
-ggsave(paste0(selected," cfRNA panel - AUC.pdf"), width = 7, height = 7)
-ggsave(paste0(selected," cfRNA panel - AUC.png"), width = 7, height = 7, bg="white")
 
 #####cancer stage ----
 dis_case_early<-subset(meta,sample_type=="LC_SZDE" & Stage=="Early")
@@ -236,7 +223,7 @@ discovery_x_early <- top_rpm[dis_ID_early,]
 discovery_x_late <- top_rpm[dis_ID_late,]
 discovery_y_early <- dis_case_early$group
 discovery_y_late <- dis_case_late$group
-####STAGE risk score
+####STAGE each individual risk score
 registerDoParallel(cl<-makeCluster(10))
 prob_result<-foreach(seed=seeds, .combine="cbind", .packages=c("tidyverse","caret","glmnet","ROCR","pROC")) %dopar% {
   set.seed(seed)
@@ -264,18 +251,35 @@ df_median<-apply(df[,-1], 1, median)
 df_median<-sort(df_median)
 df_plot<-melt(df,"id")
 df_plot$id<-factor(df_plot$id,levels = names(df_median))
+# df_plot$stage<-rep(c(dis_case_early$Stage,dis_case_late$Stage),100)
+# df_plot$stage=factor(df_plot$stage,levels = c("Late","Early"))
 df_plot$AJCCstage<-rep(c(dis_case_early$AJCC.Stage,dis_case_late$AJCC.Stage),100)
 df_plot$AJCCstage=str_c("Stage ",df_plot$AJCCstage)
 df_plot$AJCCstage=factor(df_plot$AJCCstage,levels = c("Stage I","Stage II","Stage III","Stage IV"))
-ggplot(df_plot, aes(x=id, y=value,color=AJCCstage)) + geom_boxplot(outlier.size = 0.1)+ scale_color_manual(values = c("#FB7B5B","#F5553C","#E32F27","#C2161B"))+
+ggplot(df_plot, aes(x=id, y=value,color=AJCCstage)) + geom_boxplot(outlier.size = 0.1,lwd=0.3,fatten=0.5)+ scale_color_manual(values = c("#FB7B5B","#F5553C","#E32F27","#C2161B"))+
   labs(x=paste0("Lung cancer patients (N=139)"), y="Lung cancer risk scores", title=paste0(""))+ geom_hline(yintercept=0.5, linetype="dashed", color = "black") +
-  theme_classic()+theme(axis.text.x = element_blank(),  axis.text.y = element_text(color = "black"), text = element_text(size = 8), 
+  theme_classic()+theme(axis.text.x = element_blank(),  axis.text.y = element_text(color = "black"), text = element_text(size = 8), axis.ticks.x = element_blank(),
                         panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5), axis.line = element_line(linewidth=0.15),
                         legend.position = c(0.88, 0.28), legend.title = element_blank(),legend.background = element_blank())
 ggsave(paste0("Risk score of different AJCC stage lung cancer.pdf"), width = 5, height = 2.5)
 ggsave(paste0("Risk score of different AJCC stage lung cancer.png"), width = 5, height = 2.5, bg="white")
 
-"#FFF5F0" "#FEE2D5" "#FCC3AB" "#FC9F81" "#FB7B5B" "#F5553C" "#E32F27" "#C2161B" "#9E0D14" "#67000D"
+###STAGE median risk score
+df_median<-data.frame(df_median,df_median, row.names = names(df_median))
+df_median<-df_median[OrderMixed(rownames(df_median)),]
+submeta<-meta[meta$sample_type=="LC_SZDE",]
+submeta<-submeta[!is.na(submeta$Stage),]
+submeta<-submeta[OrderMixed(submeta$ID),]
+df_median$stage<-submeta$AJCC.Stage
+df_median$stage=factor(df_median$stage,levels = c("I","II","III","IV"))
+plot<-ggplot(df_median, aes(x=stage, y=df_median)) + geom_boxplot(outlier.shape=NA)+ geom_jitter(aes(colour = stage),shape=16, position=position_jitter(0.2),size=1)+
+  scale_colour_manual(values=c("#FB7B5B","#F5553C","#E32F27","#C2161B"))+labs(x="", y="LC risk scores")+
+  theme_classic()+theme(text = element_text(size = 8), axis.text.y = element_text(colour = "black"), axis.text.x = element_text(colour = "black"),
+                        panel.border = element_rect(colour = "black", fill=NA, linewidth=0.15), legend.position = "none",
+                        axis.line = element_line(linewidth=0.15))
+ggsave(paste0("Median risk score boxplot beween stages.pdf"), width = 4, height = 6, units="cm")
+ggsave(paste0("Median risk score boxplot beween stages.png"), width = 4, height = 6, units="cm", bg="white")
+#"#FFF5F0" "#FEE2D5" "#FCC3AB" "#FC9F81" "#FB7B5B" "#F5553C" "#E32F27" "#C2161B" "#9E0D14" "#67000D"
 ####STAGE AUC
 seeds<-1:100
 registerDoParallel(cl<-makeCluster(10))
@@ -319,7 +323,7 @@ df_plot<-melt(AUC_result,"seed")
 df_plot$variable<-gsub("Early","Early stage",df_plot$variable)
 df_plot$variable<-gsub("Late","Late stage",df_plot$variable)
 ggplot(df_plot, aes(x=variable, y=value,color=variable)) + geom_boxplot(outlier.shape = NA)+ geom_jitter(shape=16, position=position_jitter(0.2),size=1)+
-  scale_color_manual(values=c("#D6404E","#9E0142"))+labs(x="", y="AUC in 100 repeats", title=paste0(""))+
+  scale_color_manual(values=c("#FB7B5B","#C2161B"))+labs(x="", y="AUC in 100 repeats", title=paste0(""))+
   theme_classic()+theme(text = element_text(size = 8), panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5), 
                         legend.position = "none", axis.text = element_text(color = "black"),axis.line = element_line(linewidth=0.15))
 ggsave("AUC boxplot beween early and late stage.png",device = "png",bg="white",width = 4, height = 6,units = "cm")
