@@ -26,14 +26,14 @@ ncontrol=table(meta$group==control)["TRUE"]
 
 ####RNA matrix----
 ##mRNA
-msRNA<-read.csv("../../Raw read counts/mRNA.csv", header = T, row.names = 1)
-msRNA<-msRNA[,meta$ID]
+mRNA<-read.csv("../../Raw read counts/mRNA.csv", header = T, row.names = 1)
+mRNA<-mRNA[,meta$ID]
 ##miRNA
 miRNA<-read.csv("../../Raw read counts/miRNA.csv", header = T, row.names = 1)
 miRNA<-miRNA[,meta$ID]
 ##lncRNA
-lsRNA<-read.csv("../../Raw read counts/lncRNA.csv", header = T, row.names = 1)
-lsRNA<-lsRNA[,meta$ID]
+lncRNA<-read.csv("../../Raw read counts/lncRNA.csv", header = T, row.names = 1)
+lncRNA<-lncRNA[,meta$ID]
 ##piRNA
 piRNA<-read.csv("../../Raw read counts/piRNA.csv", header = T, row.names = 1)
 piRNA<-piRNA[,meta$ID]
@@ -53,8 +53,8 @@ snRNA<-snRNA[,meta$ID]
 snoRNA<-read.csv("../../Raw read counts/snoRNA.csv", header = T, row.names = 1)
 snoRNA<-snoRNA[,meta$ID]
 ##All RNA
-cfRNA<-rbind(msRNA,lsRNA,miRNA,piRNA,tsRNA,rsRNA,ysRNA,snRNA,snoRNA)
-RNA_name<-list(msRNA=msRNA,lsRNA=lsRNA,miRNA=miRNA,piRNA=piRNA,tsRNA=tsRNA,rsRNA=rsRNA,ysRNA=ysRNA,snRNA=snRNA,snoRNA=snoRNA)
+cfRNA<-rbind(mRNA,lncRNA,miRNA,piRNA,tsRNA,rsRNA,ysRNA,snRNA,snoRNA)
+RNA_name<-list(mRNA=mRNA,lncRNA=lncRNA,miRNA=miRNA,piRNA=piRNA,tsRNA=tsRNA,rsRNA=rsRNA,ysRNA=ysRNA,snRNA=snRNA,snoRNA=snoRNA)
 RNA_name <- lapply(RNA_name, row.names)
 
 ##DESeq2----
@@ -68,7 +68,7 @@ results<-results[order(results$pvalue),]
 write.table(results, paste0("DESeq2 results-cfRNA-",case," vs. ",control,".txt"),sep = "\t", col.names = NA, quote = FALSE)
 sig_results<-results[results$padj < 0.1,]
 write.table(sig_results, paste0("DESeq2 significant results-cfRNA-",case," vs. ",control,".txt"),sep = "\t", col.names = NA, quote = FALSE)
-candi_results<-results[results$padj < 0.1 & results$baseMean>=10 & results$log2FoldChange>=1,]
+candi_results<-results[results$padj < 0.1 & results$baseMean>=10 & results$log2FoldChange>=0.8,]
 write.table(candi_results, paste0("DESeq2 candidate results-cfRNA-",case," vs. ",control,".txt"),sep = "\t", col.names = NA, quote = FALSE)
 
 ##Distribution
@@ -107,9 +107,9 @@ for (RNA in names(RNA_name)) {
   DESeq_result[RNA,"gain"]<-gain
   loss<-nrow(subset(temp, padj<0.1 & log2FoldChange<0))
   DESeq_result[RNA,"loss"]<-loss
-  gain_filter<-nrow(temp[temp$padj < 0.1 & temp$baseMean>=10 & temp$log2FoldChange>=1,])
+  gain_filter<-nrow(temp[temp$padj < 0.1 & temp$baseMean>=10 & temp$log2FoldChange>=0.8,])
   DESeq_result[RNA,"gain_filter"]<-gain_filter
-  loss_filter<-nrow(temp[temp$padj < 0.1 & temp$baseMean>=10 & temp$log2FoldChange<=(-1),])
+  loss_filter<-nrow(temp[temp$padj < 0.1 & temp$baseMean>=10 & temp$log2FoldChange<=(-0.8),])
   DESeq_result[RNA,"loss_filter"]<-loss_filter
 }
 DESeq_result<-data.frame(DESeq_result)
@@ -132,13 +132,13 @@ for (RNA in names(RNA_name)) {
   temp_Volcano<-EnhancedVolcano(temp, lab=NA,
                                 x = "log2FoldChange", y = "padj", 
                                 title = paste0(RNA), subtitle = paste0("loss ",decrease,"  |  gain ",increase),
-                                pCutoff = 0.1, FCcutoff = 1, xlim = c(x1,x2), ylim = c(0,y), pointSize = 1, legendPosition = 'none',
+                                pCutoff = 0.1, FCcutoff = 0.8, xlim = c(x1,x2), ylim = c(0,y), pointSize = 1, legendPosition = 'none',
                                 col = c("black","black","#4E62AB","#D6404E"), colAlpha = 0.9, legendLabels = c("NS", "FC", "FDR", "FDR & FC"))
   temp_Volcano<-temp_Volcano + theme(axis.title = element_blank(),axis.text = element_text(color = "black"),
                                      plot.title = element_text(hjust = 0.5),plot.subtitle = element_text(hjust = 0.5))
   plot[[RNA]]<-temp_Volcano
 }
-combine<-ggarrange(plot[["msRNA"]],plot[["lsRNA"]],plot[["miRNA"]],
+combine<-ggarrange(plot[["mRNA"]],plot[["lncRNA"]],plot[["miRNA"]],
                    plot[["piRNA"]],plot[["snRNA"]],plot[["snoRNA"]],
                    plot[["tsRNA"]],plot[["rsRNA"]],plot[["ysRNA"]],
                    ncol = 3, nrow = 3)
@@ -155,7 +155,7 @@ decrease<-nrow(subset(results_cfRNA, padj<0.1 & log2FoldChange<0))
 cfRNA_Volcano<-EnhancedVolcano(results_cfRNA, lab=NA,
                                x = "log2FoldChange", y = "padj", ylab = expression('-Log'[10]*' adjusted p value'), 
                                title = "LC vs. Non-LC", subtitle = paste0("loss ",decrease,"  |  gain ",increase),caption = "",
-                               pCutoff = 0.1, FCcutoff = 1, xlim = c(-5.8,6.5), ylim = c(0,78), pointSize = 1, 
+                               pCutoff = 0.1, FCcutoff = 0.8, xlim = c(-5.8,6.5), ylim = c(0,78), pointSize = 1, 
                                col = c("black","black","#4E62AB","#D6404E"), colAlpha = 0.9, legendLabels = c("NS", "FC", "FDR", "FDR & FC"))
 cfRNA_Volcano<-cfRNA_Volcano + theme_classic()+ theme(axis.text = element_text(color = "black"), legend.position = "none",
                                                       plot.title = element_text(hjust = 0.5,face = "bold"),plot.subtitle = element_text(hjust = 0.5),
@@ -164,49 +164,6 @@ cfRNA_Volcano
 ggsave(paste0("Volcano plot - cfRNA",".pdf"), width=4, height=6)
 ggsave(paste0("Volcano plot - cfRNA",".png"), width=4, height=6, units="in", bg="white")
 
-##Distribution----
-sig_results<-results_cfRNA[results_cfRNA$padj < 0.1,]
-Type_number<-data.frame(group=c("msRNA","lsRNA","miRNA","piRNA","tsRNA","rsRNA","ysRNA","snRNA","snoRNA"),
-                        value=c(table(rownames(sig_results) %in% rownames(msRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(lsRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(miRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(piRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(tsRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(rsRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(ysRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(snRNA))["TRUE"],
-                                table(rownames(sig_results) %in% rownames(snoRNA))["TRUE"]))
-Type_number[is.na(Type_number)]=0
-Type_number <- Type_number %>% 
-  arrange(desc(group)) %>%
-  mutate(prop = value / sum(Type_number$value) *100) %>%
-  mutate(ypos = cumsum(prop)- 0.5*prop )
-Type_number$prop2<-paste0(round(Type_number$prop,1),"%")
-
-Type_number$group<-factor(Type_number$group,levels=c("lsRNA","miRNA","piRNA","msRNA","snRNA","rsRNA","snoRNA","ysRNA","tsRNA"))
-Type_number_out<-Type_number[Type_number$group== "miRNA" | Type_number$group== "snRNA" | Type_number$group== "snoRNA",]
-Type_number_in<-Type_number[Type_number$group== "lsRNA" | Type_number$group== "piRNA" | Type_number$group== "msRNA" | Type_number$group== "rsRNA" | Type_number$group== "tsRNA" | Type_number$group== "ysRNA",]
-ggplot(Type_number, aes(x="", y=prop, fill=group)) + geom_bar(stat="identity", width=1, color="black") + coord_polar("y", start=0) + 
-  geom_text(data = Type_number_in, aes(y = ypos, label = paste(prop2)), color = "black", size=5, nudge_x = 0.3) +
-  geom_label_repel(data = Type_number_out, aes(y = ypos, label = paste0(prop2)), size = 5, nudge_x = 0.6, show.legend = FALSE) +
-  scale_fill_manual(values=c("#9E0142","#D6404E","#F57547","#FDB96A","#F0D43A","#CBE99D","#87CFA4","#469EB4","#4E62AB"))+
-  theme_void() + 
-  theme(plot.title=element_text(size=20,hjust = 0.5), plot.subtitle=element_text(size=16,hjust = 0.5),
-        legend.text=element_text(size=14), legend.title=element_blank(), legend.position = "bottom")
-ggsave(paste0("Pie plot-All cfRNA-Significant results.pdf"), width=6, height = 8)
-#ggsave(paste0("Pie plot-All cfRNA-Significant results.png"), width=6, height = 8, units = "in", bg="white")
-#Note: Position not correct. Edit with Adobe AI.
-
-"#9E0142"-"rgb(158,1,66)"-"lsRNA"
-"#D6404E"-"rgb(214,64,78)"-"miRNA"
-"#F57547"-"rgb(245,117,71)"-"piRNA"
-"#FDB96A"-"rgb(253,185,106)"-"msRNA"
-"#F0D43A"-"rgb(240,212,58)"-"snRNA"
-"#CBE99D"-"rgb(203,233,157)"-"rsRNA"
-"#87CFA4"-"rgb(135,207,164)"-"snoRNA"
-"#469EB4"-"rgb(70,158,180)"-"ysRNA"
-"#4E62AB"-"rgb(78,98,171)"-"tsRNA"
-"unspecify"
 
 ###rpm boxplot----
 AllRNA<-read.table("../../Normalization_RPM_colsum/cfRNA-log2(cpm).txt", header = T, row.names = 1)
