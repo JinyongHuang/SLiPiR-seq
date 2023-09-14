@@ -10,14 +10,14 @@ library(foreach)#multi-core to save time
 library(doParallel)#multi-core to save time
 
 ####RNA name----
-RNA_name <- list.files(path = "../../../Normalization_RPM_colsum/", pattern = "cpm.txt$", full.names = TRUE, recursive = TRUE) 
+RNA_name <- list.files(path = "../../Normalization_RPM_colsum/", pattern = "cpm.txt$", full.names = TRUE, recursive = TRUE) 
 RNA_name <- RNA_name[grep("cfRNA",RNA_name, invert = TRUE)]
 RNA_name <- lapply(RNA_name, read.table, header=TRUE, sep="\t",row.names=1)
 RNA_name <- lapply(RNA_name, row.names)
-names(RNA_name)<- c("lsRNA",  "miRNA",  "msRNA",  "piRNA",  "rsRNA",  "snoRNA", "snRNA",  "tsRNA",  "ysRNA")
+names(RNA_name)<- c("lncRNA",  "miRNA",  "mRNA",  "piRNA",  "rsRNA",  "snoRNA", "snRNA",  "tsRNA",  "ysRNA")
 
 ####Sample ID----
-meta<-read.csv("../../../Metadata/Meta_with_clinical_and_Summary_good_samples.csv", header = T)
+meta<-read.csv("../../Metadata/Meta_with_clinical_and_Summary_good_samples.csv", header = T)
 meta <- subset(meta,sample_type=="LC_SZDE" | sample_type=="NOR_SZBA" |  sample_type=="LC_SZBU" | sample_type=="NOR_SZDW" |
                  sample_type=="BRC_NXYK" | sample_type=="CRC_NXYK" | sample_type=="GC_NXYK" | sample_type=="HCC_NXYK")
 meta$group<-ifelse(meta$sample_type=="HCC_NXYK","Cases","Controls")
@@ -39,7 +39,7 @@ vali_type<-c(vali_case$group,vali_control$group)
 nvalidation<-length(vali_ID)
 
 ####Data for machine learning----
-AllRNA<-read.table("../../../Normalization_RPM_colsum/cfRNA-log2(cpm).txt", header = T, row.names = 1)
+AllRNA<-read.table("../../Normalization_RPM_colsum/cfRNA-log2(cpm).txt", header = T, row.names = 1)
 AllRNA<-AllRNA[,meta$ID]
 
 ####Significant RNA
@@ -51,7 +51,7 @@ for (RNA in names(RNA_name)) {
   Distribution[RNA]=table(rownames(sig_cfRNA) %in% RNA_name[[RNA]])["TRUE"]
 }
 sum(Distribution)
-sig_list[["goiRNA"]]<-c(sig_list[["msRNA"]],sig_list[["miRNA"]],sig_list[["snRNA"]],sig_list[["snoRNA"]],sig_list[["tsRNA"]])
+sig_list[["goiRNA"]]<-c(sig_list[["mRNA"]],sig_list[["miRNA"]],sig_list[["snRNA"]],sig_list[["snoRNA"]],sig_list[["tsRNA"]])
 
 ####Filter by LASSO logistic regression----
 goi=sig_list[["goiRNA"]]
@@ -80,14 +80,13 @@ rownames(coef)<-c("Intercept",colnames(subset))
 colnames(coef)<-1:100
 coef_filter <-data.frame(apply(coef[-1,], 1, function(x) length(which(x!=0))))
 coef_filter$name<-rownames(coef_filter)
-coef_filter <-coef_filter[coef_filter$apply.coef..1.....1..function.x..length.which.x....0... > 0,]
+coef_filter <-coef_filter[coef_filter$apply.coef..1.....1..function.x..length.which.x....0... > 10,]
 goi<-rownames(coef_filter)
-
+saveRDS(goi,"GOI-Liver cancer vs. others.rds")
 ggplot(coef_filter, aes(x=apply.coef..1.....1..function.x..length.which.x....0...)) + 
-  geom_histogram(color="black", fill="gray") + labs(x="Frequency of non-zero coefficient",y="cfRNA of interest",title="HCC vs. Non-HCC")+
+  geom_histogram(color="black", fill="gray") + labs(x="Frequency of non-zero coefficient in 100 tests",y="# Gene of interest",title="HCC vs. Non-HCC")+
   theme_classic()+theme(axis.text = element_text(colour = "black",size = 10),plot.title = element_text(hjust=0.5,face = "bold",size = 14), 
-                        axis.title = element_text(size = 10), panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5))+
-  annotate(geom="text", x=50, y=25, label="112 goi cfRNA",color="black",size=4)
+                        axis.title = element_text(size = 10), panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5))
 ggsave(paste0("Histogram for LASSO coef distribution.pdf"), width = 4, height = 6)
 ggsave(paste0("Histogram for LASSO coef distribution.png"), width = 4, height = 6, bg="white")
 
@@ -96,12 +95,18 @@ goi_list<-list()
 for (RNA in names(RNA_name)) {
   goi_list[[RNA]]<-goi[(goi %in% RNA_name[[RNA]])]
 }
-goi_list[["cfRNA"]]<-c(goi_list[["msRNA"]],goi_list[["miRNA"]],goi_list[["snRNA"]],goi_list[["snoRNA"]],goi_list[["tsRNA"]])
+goi_list[["cfRNA"]]<-c(goi_list[["mRNA"]],goi_list[["miRNA"]],goi_list[["snRNA"]],goi_list[["snoRNA"]],goi_list[["tsRNA"]])
 goi_list<-Filter(function(x) length(x) > 0, goi_list)
-orderd_name<-c("cfRNA","msRNA","miRNA","snRNA","snoRNA","tsRNA")
+orderd_name<-c("cfRNA","mRNA","miRNA","snRNA","snoRNA","tsRNA")
 goi_list<- goi_list[match(orderd_name, names(goi_list))]
 saveRDS(goi_list,"goi_list_Liver cancer vs. Non-Liver cancer.rds")
-
+writeLines(goi_list[["cfRNA"]],"Liver cancer vs. Non-Liver cancer.txt")
+dir.create(paste0(getwd(),"/goi"), showWarnings = FALSE)
+for (RNA in names(goi_list)) {
+  GOI=goi_list[[RNA]]
+  if (length(GOI)==0) next
+  writeLines(GOI,paste0("goi/",RNA," name.txt"))
+}
 ####Machine learning----
 dis_type<-factor(dis_type,levels=c("Cases","Controls"))
 ML<-list()
@@ -231,71 +236,10 @@ for (RNA in names(goi_list)) {
   ML[[RNA]]<-results
 }
 
-###More LR test to avoid sample partition bias
-###LASSO logistic regression
-ML_LR<-list()
-seeds<-1:200 #repeat 100 times
-for (RNA in names(goi_list)) {
-  print(paste("Start working on",RNA))
-  goi=goi_list[[RNA]]
-  if (length(goi)<=1) next
-  subset<-AllRNA[goi,]
-  subset<-t(subset)
-  discovery_x <- subset[dis_ID,]
-  discovery_y <- dis_type
-  registerDoParallel(cl<-makeCluster(10))
-  result_seed<-foreach(seed=seeds, .combine="rbind",.packages=c("tidyverse","caret","glmnet","ROCR","pROC")) %dopar% {
-    set.seed(seed) #for loop
-    splitSample <- createDataPartition(discovery_y, p = 0.8, list = FALSE)
-    training_x <- discovery_x[splitSample,]
-    training_y <- discovery_y[splitSample]
-    testing_x <- discovery_x[-splitSample,]
-    testing_y <- discovery_y[-splitSample]
-    if (length(unique(training_y))==1) next
-    if (length(unique(testing_y))==1) next
-    ##Fit
-    cvfit <- cv.glmnet(training_x, training_y, family = "binomial", alpha = 0, nfolds = 10)
-    LR <- glmnet(training_x, training_y, family = "binomial", alpha = 0, lambda = cvfit$lambda.min)
-    ##Training set
-    pred.class <- predict(LR, training_x, type = "class")
-    ACC_training<-round(100* mean(pred.class[,1] == training_y),2)
-    prob <- predict(LR, training_x, type = "response")
-    pred <- prediction(prob, training_y)
-    AUC_training <- round(attr(performance(pred, "auc"), "y.values")[[1]],3)
-    roc<-roc(training_y,as.numeric(prob))
-    coord_list <- coords(roc, x = "all")
-    SenAt1Spe<-subset(coord_list,specificity==1)#sensitivity when specificity=1
-    SenAt1Spe_training<-SenAt1Spe[order(-SenAt1Spe$sensitivity),][1,3]
-    ##Held-out testing set
-    pred.class <- predict(LR, testing_x, type = "class")
-    ACC_testing<-round(100* mean(pred.class[,1] == testing_y),2)
-    prob <- predict(LR, testing_x, type = "response")
-    pred <- prediction(prob,testing_y)
-    AUC_testing <- round(attr(performance(pred, "auc"), "y.values")[[1]],3)
-    roc<-roc(testing_y,as.numeric(prob))
-    coord_list <- coords(roc, x = "all")
-    SenAt1Spe<-subset(coord_list,specificity==1)#sensitivity when specificity=1
-    SenAt1Spe_testing<-SenAt1Spe[order(-SenAt1Spe$sensitivity),][1,3]
-    c(ACC_training,ACC_testing,AUC_training,AUC_testing,SenAt1Spe_training,SenAt1Spe_testing)
-  }
-  stopCluster(cl)
-  colnames(result_seed)= c('ACC_training','ACC_testing','AUC_training','AUC_testing','SenAt1Spe_training','SenAt1Spe_testing')
-  LR_df<-data.frame(result_seed)
-  LR_df<-LR_df[LR_df$AUC_testing!=0.5,]
-  LR_df<-LR_df[LR_df$SenAt1Spe_testing!=0,]
-  LR_df<-LR_df[1:100,]
-  ML_LR[[RNA]]<-LR_df
-}
-
-ML_new<-list()
-for (RNA in names(ML)) {
-  ML_LR[[RNA]]$method<-rep("LR",100)
-  ML_new[[RNA]]<-base::rbind(ML_LR[[RNA]],ML[[RNA]][101:300,])
-}
 
 ####plot----
-saveRDS(ML_new,"ML_results_Liver cancer vs. Non-liver cancer.rds")
-AUC_Testing<-lapply(ML_new, "[[", "AUC_testing")
+saveRDS(ML,"ML_results_Liver cancer vs. Non-liver cancer.rds")
+AUC_Testing<-lapply(ML, "[[", "AUC_testing")
 AUC_Testing<-data.frame(AUC_Testing)
 AUC_Testing$method<-c(rep("LR",100),rep("RF",100),rep("SVM",100))
 AUC_Testing_median<-aggregate(AUC_Testing[,1:length(ML)],by=list(AUC_Testing$method),median)
@@ -377,6 +321,7 @@ plot<-ggplot(df_median, aes(x=actual, y=df_discovery_median)) + geom_boxplot(out
                         axis.line = element_line(linewidth=0.15))
 ggsave(paste0("Liver cancer median risk score boxplot by group.pdf"), width = 4, height = 4, units="cm")
 ggsave(paste0("Liver cancer median risk score boxplot by group.png"), width = 4, height = 4, units="cm", bg="white")
+saveRDS(df_median,'HCC-Discovery cohort risk scores.rds')
 
 ##Risk score validation----
 seeds<-1:100
