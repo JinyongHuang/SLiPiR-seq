@@ -38,19 +38,17 @@ piRNA[is.na(piRNA)]=0
 write.csv(piRNA,"result_final/piRNA.csv")
 
 ####rsRNA
-rsRNA_match<-read.csv("../Reference/rsRNA_match.csv")
-rsRNA_match<-rsRNA_match[,c(2,5)]
 files = list.files(path = "result_calling/rsRNA", pattern = "rsRNA.txt$") 
 for(file in files){
   print(file)
-  temp = read.table(file = paste("result_calling/rsRNA/",file, sep=""))
-  temp<-merge(temp,rsRNA_match,by.x = "V1", by.y = "Header.x")
-  temp<-aggregate(V2 ~ Header.y, temp, sum)
+  File=paste("result_calling/rsRNA/",file, sep="")
+  if (countLines(File) <1) next
+  temp = read.table(file = File)
   colnames(temp)[2] = paste0(strsplit(file, "_")[[1]][1],"_",strsplit(file, "_")[[1]][2])
   if(!exists("rsRNA")){
     rsRNA = temp
   } else{
-    rsRNA = merge(rsRNA, temp, by="Header.y", all=T)
+    rsRNA = merge(rsRNA, temp, by="V1", all=T)
   }
 }
 row.names(rsRNA)<-rsRNA[,1];rsRNA<-rsRNA[,-1]
@@ -58,19 +56,17 @@ rsRNA[is.na(rsRNA)]=0
 write.csv(rsRNA,"result_final/rsRNA.csv")
 
 ####ysRNA
-ysRNA_match<-read.csv("../Reference/ysRNA_match.csv")
-ysRNA_match<-ysRNA_match[,c(2,5)]
 files = list.files(path = "result_calling/ysRNA", pattern = "ysRNA.txt$") 
 for(file in files){
   print(file)
-  temp = read.table(file = paste("result_calling/ysRNA/",file, sep=""))
-  temp<-merge(temp,ysRNA_match,by.x = "V1", by.y = "Header.x")
-  temp<-aggregate(V2 ~ Header.y, temp, sum)
+  File=paste("result_calling/ysRNA/",file, sep="")
+  if (countLines(File) <1) next
+  temp = read.table(file = File)
   colnames(temp)[2] = paste0(strsplit(file, "_")[[1]][1],"_",strsplit(file, "_")[[1]][2])
   if(!exists("ysRNA")){
     ysRNA = temp
   } else{
-    ysRNA = merge(ysRNA, temp, by="Header.y", all=T)
+    ysRNA = merge(ysRNA, temp, by="V1", all=T)
   }
 }
 row.names(ysRNA)<-ysRNA[,1];ysRNA<-ysRNA[,-1]
@@ -78,19 +74,17 @@ ysRNA[is.na(ysRNA)]=0
 write.csv(ysRNA,"result_final/ysRNA.csv")
 
 ####tRFs
-tRFs_match<-read.csv("../Reference/tRFs_match.csv")
-tRFs_match<-tRFs_match[,c(2,5)]
 files = list.files(path = "result_calling/tRFs", pattern = "tRFs.txt$") 
 for(file in files){
   print(file)
-  temp = read.table(file = paste("result_calling/tRFs/",file, sep=""))
-  temp<-merge(temp,tRFs_match,by.x = "V1", by.y = "Header.x")
-  temp<-aggregate(V2 ~ Header.y, temp, sum)
+  File=paste("result_calling/tRFs/",file, sep="")
+  if (countLines(File) <1) next
+  temp = read.table(file = File)
   colnames(temp)[2] = paste0(strsplit(file, "_")[[1]][1],"_",strsplit(file, "_")[[1]][2])
   if(!exists("tRFs")){
     tRFs = temp
   } else{
-    tRFs = merge(tRFs, temp, by="Header.y", all=T)
+    tRFs = merge(tRFs, temp, by="V1", all=T)
   }
 }
 row.names(tRFs)<-tRFs[,1];tRFs<-tRFs[,-1]
