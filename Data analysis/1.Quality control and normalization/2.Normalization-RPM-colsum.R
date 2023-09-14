@@ -5,16 +5,16 @@ library(gtools)
 library(ggplot2)
 library(ggpubr)
 ####meta----
-meta<-read.csv("../Metadata/Meta_with_clinical_and_Summary_good_samples.csv", header = T, row.names = 1)
+meta<-read.csv("../Metadata/Meta_with_clinical_and_Summary_used_samples_20230829.csv", header = T, row.names = 1)
 table(meta$sample_type)
 meta<-meta[OrderMixed(meta$ID),]
 ####RNA matrix----
 ###mRNA
-msRNA<-read.csv("../Raw read counts/mRNA.csv", header = T, row.names = 1)
-msRNA<-msRNA[,meta$ID]
+mRNA<-read.csv("../Raw read counts/mRNA.csv", header = T, row.names = 1)
+mRNA<-mRNA[,meta$ID]
 ###lncRNA
-lsRNA<-read.csv("../Raw read counts/lncRNA.csv", header = T, row.names = 1)
-lsRNA<-lsRNA[,meta$ID]
+lncRNA<-read.csv("../Raw read counts/lncRNA.csv", header = T, row.names = 1)
+lncRNA<-lncRNA[,meta$ID]
 ###miRNA
 miRNA<-read.csv("../Raw read counts/miRNA.csv", header = T, row.names = 1)
 miRNA<-miRNA[,meta$ID]
@@ -37,11 +37,11 @@ snRNA<-snRNA[,meta$ID]
 snoRNA<-read.csv("../Raw read counts/snoRNA.csv", header = T, row.names = 1)
 snoRNA<-snoRNA[,meta$ID]
 ##All RNA
-cfRNA<-rbind(msRNA,lsRNA,miRNA,piRNA,snRNA,snoRNA,tsRNA,rsRNA,ysRNA)
+cfRNA<-rbind(mRNA,lncRNA,miRNA,piRNA,snRNA,snoRNA,tsRNA,rsRNA,ysRNA)
 cfRNA<-cfRNA[,OrderMixed(colnames(cfRNA))]
 colsum=colSums(cfRNA)
 ###List
-RNA<-list(msRNA=msRNA, lsRNA=lsRNA, miRNA=miRNA, piRNA=piRNA, snRNA=snRNA,snoRNA=snoRNA, tsRNA=tsRNA, rsRNA=rsRNA, ysRNA=ysRNA,cfRNA=cfRNA)
+RNA<-list(mRNA=mRNA, lncRNA=lncRNA, miRNA=miRNA, piRNA=piRNA, snRNA=snRNA,snoRNA=snoRNA, tsRNA=tsRNA, rsRNA=rsRNA, ysRNA=ysRNA,cfRNA=cfRNA)
 
 ####log2(cpm+1) normalization----
 ##Normalize by studied RNA reads
@@ -114,7 +114,7 @@ for (r in names(RNA)[1:9]){
   temp2<-RNA_log2cpm[[r]][,id2]
   temp <- merge(apply(temp1,1,mean),apply(temp2,1,mean),by=0)
   plot <- ggplot(temp, aes(x=x, y=y)) + geom_point(size=1,alpha=0.8,color="#D6404E") + geom_rug() + theme_classic() +
-    stat_cor(aes(label = paste(after_stat(r.label))),digits = 3,method = "pearson", label.x = 6, label.y = 1.5, size=4)+
+    stat_cor(aes(label = paste(after_stat(r.label))),digits = 3,method = "pearson", label.x = range(temp1[,1])[2]*0.6, label.y = range(temp1[,1])[2]*0.15, size=4)+
     labs(title=paste0(r)) +theme(axis.title=element_blank(),axis.text = element_text(color = "black"),
                                  plot.title = element_text(hjust=0.5,face = "bold"))
   
@@ -133,8 +133,8 @@ temp1<-RNA_log2cpm[["cfRNA"]][,id1]
 temp2<-RNA_log2cpm[["cfRNA"]][,id2]
 temp <- merge(apply(temp1,1,mean),apply(temp2,1,mean),by=0)
 plot <- ggplot(temp, aes(x=x, y=y)) + geom_point(size=0.3,alpha=0.8,color="#D6404E") + geom_rug() + theme_minimal() +
-  stat_cor(aes(label = paste(..r.label..)),digits = 3,method = "pearson", label.x = 8, label.y = 2.5, size=2)+
-  stat_cor(aes(label = paste(..p.label..)),digits = 3,method = "pearson", label.x = 8, label.y = 1, size=2)+
+  stat_cor(aes(label = after_stat(r.label)),digits = 3,method = "pearson", label.x = 8, label.y = 2.5, size=2)+
+  stat_cor(aes(label = after_stat(p.label)),digits = 3,method = "pearson", label.x = 8, label.y = 1, size=2)+
   labs(x=expression("Log"[2]*"(RPM) of cases"), y = expression("Log"[2]*"(RPM) of controls")) + theme_classic()+
   theme(axis.text = element_text(color = "black",size=6),axis.title = element_text(size=6),panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5),axis.line = element_line(linewidth=0.15))
 ggsave("Pearson's correlation all cfRNA.pdf", width = 5, height = 5, units="cm")
