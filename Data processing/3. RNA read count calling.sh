@@ -22,7 +22,7 @@ echo Complete
 echo ----------------------------------------------------
 echo Start calling piRNAs
 date
-cat sample_barcode_list.txt | parallel -j 80 bowtie2 -x ../Reference/piRNA/piR_hsa -S result_mapping/piRNA/{}_map2piRNA.sam -U result_trimming/trimmomatic_15nt/{}_cut_trim_R1.fastq '&>' result_mapping/piRNA/{}_map2piRNA.log
+cat sample_barcode_list.txt | parallel -j 80 bowtie2 --no-unal -x ../Reference/piRNA/piR_hsa -S result_mapping/piRNA/{}_map2piRNA.sam -U result_trimming/trimmomatic_15nt/{}_cut_trim_R1.fastq '&>' result_mapping/piRNA/{}_map2piRNA.log
 doawk() {
   INPUT=$1
   awk '{if ($6~/^[0-9]*M$/) print $3}' "$INPUT" | sort | uniq -c | sort -nr
@@ -36,7 +36,7 @@ echo Complete
 echo ----------------------------------------------------
 echo Start calling miRNA
 date
-cat sample_barcode_list.txt | parallel -j 80 bowtie2 -x ../Reference/miRNA/hsa_miRNAs -S result_mapping/miRNA/{}_map2miRNA.sam -U result_trimming/trimmomatic_19nt/{}_cut_trim_R1.fastq '&>' result_mapping/miRNA/{}_map2miRNA.log
+cat sample_barcode_list.txt | parallel -j 80 bowtie2 --no-unal -x ../Reference/miRNA/hsa_miRNAs -S result_mapping/miRNA/{}_map2miRNA.sam -U result_trimming/trimmomatic_19nt/{}_cut_trim_R1.fastq '&>' result_mapping/miRNA/{}_map2miRNA.log
 doawk() {
   INPUT=$1
   awk '{if ($6~/^[0-9]*M$/) print $3}' "$INPUT" | sort | uniq -c | sort -nr
