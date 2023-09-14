@@ -11,7 +11,7 @@ library(foreach)#multi-core to save time
 library(doParallel)#multi-core to save time
 
 ####Sample ID----
-meta<-read.csv("../../Metadata/Meta_with_clinical_and_Summary_good_samples_20230829.csv", header = T)
+meta<-read.csv("../../Metadata/Meta_with_clinical_and_Summary_good_samples.csv", header = T)
 meta <- subset(meta,sample_type=="LC_SZDE" | sample_type=="NOR_SZBA" |
                  sample_type=="BRC_NXYK" | sample_type=="CRC_NXYK" | sample_type=="GC_NXYK" | sample_type=="HCC_NXYK")
 meta$group<-ifelse(meta$Group=="Breast cancer","Cases","Controls")
