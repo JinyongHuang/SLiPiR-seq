@@ -1,7 +1,7 @@
 echo ----------------------------------------------------
 echo Start updating rsRNA database
 date
-cat sample_barcode_list.txt | parallel -j 80 bowtie2 -x ../Reference/rRNA/Homo_rRNA -S result_mapping/rRNA/{}_cut_trim_map2rRNA.sam -U result_trimming/trimmomatic_15nt/{}_cut_trim_R1.fastq '&>' result_mapping/rRNA/{}_cut_trim_map2rRNA.log
+cat sample_barcode_list.txt | parallel -j 80 bowtie2 --score-min C,0 --no-unal -x ../Reference/rRNA/Homo_rRNA -S result_mapping/rRNA/{}_cut_trim_map2rRNA.sam -U result_trimming/trimmomatic_15nt/{}_cut_trim_R1.fastq '&>' result_mapping/rRNA/{}_cut_trim_map2rRNA.log
 doawk() {
   INPUT=$1
   awk '{if ($6~/^[0-9]*M$/) print $3 "\t" $10}' "$INPUT" | sort | uniq -c | sort -nr
@@ -26,7 +26,7 @@ echo Complete
 echo ----------------------------------------------------
 echo Start updating ysRNA database
 date
-cat sample_barcode_list.txt | parallel -j 80 bowtie2 -x ../Reference/yRNA/Homo_yRNA -S result_mapping/yRNA/{}_cut_trim_map2yRNA.sam -U result_trimming/trimmomatic_15nt/{}_cut_trim_R1.fastq '&>' result_mapping/yRNA/{}_cut_trim_map2yRNA.log
+cat sample_barcode_list.txt | parallel -j 80 bowtie2 --score-min C,0 --no-unal -x ../Reference/yRNA/Homo_yRNA -S result_mapping/yRNA/{}_cut_trim_map2yRNA.sam -U result_trimming/trimmomatic_15nt/{}_cut_trim_R1.fastq '&>' result_mapping/yRNA/{}_cut_trim_map2yRNA.log
 doawk() {
   INPUT=$1
   awk '{if ($6~/^[0-9]*M$/) print $3 "\t" $10}' "$INPUT" | sort | uniq -c | sort -nr
