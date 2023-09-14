@@ -137,7 +137,7 @@ Summary<-cbind(Summary,detected)
 write.csv(Summary,"Summary_sequencing_submission.csv")
 
 ####Unique samples----
-meta_ID<-read.csv("../Metadata/Meta_seq_ID.csv", header = T)
+meta_ID<-read.csv("../Metadata/Meta_id_seqID.csv", header = T)
 meta_ID<-meta_ID[OrderMixed(meta_ID$id),]
 Summary$seq_ID<-meta_ID$seq_ID
 uni_summary<-aggregate(Summary[,1:3],by=list(Summary$seq_ID),sum)
@@ -204,7 +204,6 @@ uni_summary<-cbind(uni_summary,uni_detected)
 
 write.csv(uni_summary,"Summary_unique_sample.csv")
 
-####Unique sample
 meta_unique<-read.csv("../Metadata/Meta_clinical.csv", header = T)
 meta_unique<-meta_unique[OrderMixed(meta_unique$sample_type),]
 ntype<-data.frame(table(meta_unique$sample_type))
@@ -217,7 +216,7 @@ meta_unique$ID<-ID
 
 meta<-merge(meta_unique,uni_summary,by.x="seq_ID",by.y = 0)
 meta<-meta[OrderMixed(meta$seq_ID),]
-write.csv(meta,"../Metadata/Meta_with_clinical_and_Summary_all_samples.csv",row.names = F)
+write.csv(meta,"../Metadata/Meta_with_clinical_and_Summary_all_samples_20230829.csv",row.names = F)
 
 ####convert sample ID----
 for (RNA in RNAs) {
@@ -230,9 +229,24 @@ for (RNA in RNAs) {
   write.csv(temp,paste0(RNA,".csv"))
 }
 
+####Filter out bad samples
+meta_good<-meta_unique[meta_unique$CleanRatio>20,]#bad library
+meta_good<-meta_good[meta_good$Trimmed>2e6,]#low informative reads
+meta_good<-meta_good[meta_good$rsRNA_ratio<30,]#rsRNA contemination
+meta_good$gRNA_ratio<-meta_good$lncRNA_ratio+meta_good$mRNA_ratio
+meta_good<-meta_good[meta_good$gRNA_ratio<30,]#cell contemination
+meta_good<-meta_good[-(which(meta_good$sample_type=="LC_SZBU" & meta_good$AJCC.Stage=="IV")),]#stage IV in validation cohort
+table(meta_good$sample_type)
+write.csv(meta_good,"../Metadata/Meta_with_clinical_and_Summary_good_samples_20230829.csv",row.names = F)
+
+####Used samples----
+meta_use<-meta_good[meta_good$sample_type=="BRC_NXYK" | meta_good$sample_type=="CRC_NXYK" | meta_good$sample_type=="GC_NXYK" | meta_good$sample_type=="HCC_NXYK" |
+                      meta_good$sample_type=="LC_SZDE" | meta_good$sample_type=="NOR_SZBA" | meta_good$sample_type=="LC_SZBU" | meta_good$sample_type=="NOR_SZDW",]
+write.csv(meta_use,"../Metadata/Meta_with_clinical_and_Summary_used_samples_20230829.csv",row.names = F)
+
 ##raw reads of used samples for publication
 dir.create(paste0(getwd(),"/Data submission"), showWarnings = FALSE)
-meta_good<-read.csv("../Metadata/Meta_with_clinical_and_Summary_good_samples.csv")
+meta_good<-read.csv("../Metadata/Meta_with_clinical_and_Summary_good_samples_20230829.csv")
 meta_use<-meta_good[meta_good$sample_type=="BRC_NXYK" | meta_good$sample_type=="CRC_NXYK" | meta_good$sample_type=="GC_NXYK" | meta_good$sample_type=="HCC_NXYK" |
                       meta_good$sample_type=="LC_SZDE" | meta_good$sample_type=="NOR_SZBA" | meta_good$sample_type=="LC_SZBU" | meta_good$sample_type=="NOR_SZDW",]
 meta_use<-meta_use[OrderMixed(meta_use$seq_ID),]
