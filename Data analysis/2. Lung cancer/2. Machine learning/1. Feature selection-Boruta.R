@@ -304,9 +304,3 @@ for (RNA in names(RNA_list)) {
   ggsave(paste0("All in one/Machine learning - Boruta selected ", n, " ",RNA," - AUC.pdf"), width = 7, height = 7)
   ggsave(paste0("All in one/Machine learning - Boruta selected ", n, " ",RNA," - AUC.png"), width = 7, height = 7, bg="white")
 }
-
-
-####Median and IQR----
-summary(Best[["miRNA"]][["20"]][1:100,"AUC_validation"])#Boruta selected miRNA in LR
-summary(Best[["miRNA"]][["20"]][201:300,"AUC_validation"])#Boruta selected miRNA in SVM
-
