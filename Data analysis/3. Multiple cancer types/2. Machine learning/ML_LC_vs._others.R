@@ -10,14 +10,14 @@ library(foreach)#multi-core to save time
 library(doParallel)#multi-core to save time
 
 ####RNA name----
-RNA_name <- list.files(path = "../../../Normalization_RPM_colsum/", pattern = "cpm.txt$", full.names = TRUE, recursive = TRUE) 
+RNA_name <- list.files(path = "../../Normalization_RPM_colsum/", pattern = "cpm.txt$", full.names = TRUE, recursive = TRUE) 
 RNA_name <- RNA_name[grep("cfRNA",RNA_name, invert = TRUE)]
 RNA_name <- lapply(RNA_name, read.table, header=TRUE, sep="\t",row.names=1)
 RNA_name <- lapply(RNA_name, row.names)
-names(RNA_name)<- c("lsRNA",  "miRNA",  "msRNA",  "piRNA",  "rsRNA",  "snoRNA", "snRNA",  "tsRNA",  "ysRNA")
+names(RNA_name)<- c("lncRNA",  "miRNA",  "mRNA",  "piRNA",  "rsRNA",  "snoRNA", "snRNA",  "tsRNA",  "ysRNA")
 
 ####Sample ID----
-meta<-read.csv("../../../Metadata/Meta_with_clinical_and_Summary_good_samples.csv", header = T)
+meta<-read.csv("../../Metadata/Meta_with_clinical_and_Summary_good_samples.csv", header = T)
 meta <- subset(meta,sample_type=="LC_SZDE" | sample_type=="NOR_SZBA" |  sample_type=="LC_SZBU" | sample_type=="NOR_SZDW" |
                  sample_type=="BRC_NXYK" | sample_type=="CRC_NXYK" | sample_type=="GC_NXYK" | sample_type=="HCC_NXYK")
 meta$group<-ifelse(meta$sample_type=="LC_SZDE" | meta$sample_type=="LC_SZBU","Cases","Controls")
@@ -39,7 +39,7 @@ vali_type<-c(vali_case$group,vali_control$group)
 nvalidation<-length(vali_ID)
 
 ####Data for machine learning----
-AllRNA<-read.table("../../../Normalization_RPM_colsum/cfRNA-log2(cpm).txt", header = T, row.names = 1)
+AllRNA<-read.table("../../Normalization_RPM_colsum/cfRNA-log2(cpm).txt", header = T, row.names = 1)
 AllRNA<-AllRNA[,meta$ID]
 
 ####Significant RNA
@@ -51,7 +51,7 @@ for (RNA in names(RNA_name)) {
   Distribution[RNA]=table(rownames(sig_cfRNA) %in% RNA_name[[RNA]])["TRUE"]
 }
 sum(Distribution)
-sig_list[["goiRNA"]]<-c(sig_list[["msRNA"]],sig_list[["miRNA"]],sig_list[["snRNA"]],sig_list[["snoRNA"]],sig_list[["tsRNA"]])
+sig_list[["goiRNA"]]<-c(sig_list[["mRNA"]],sig_list[["miRNA"]],sig_list[["snRNA"]],sig_list[["snoRNA"]],sig_list[["tsRNA"]])
 
 ####Filter by LASSO logistic regression----
 goi=sig_list[["goiRNA"]]
@@ -80,14 +80,13 @@ rownames(coef)<-c("Intercept",colnames(subset))
 colnames(coef)<-1:100
 coef_filter <-data.frame(apply(coef[-1,], 1, function(x) length(which(x!=0))))
 coef_filter$name<-rownames(coef_filter)
-coef_filter <-coef_filter[coef_filter$apply.coef..1.....1..function.x..length.which.x....0... > 0,]
+coef_filter <-coef_filter[coef_filter$apply.coef..1.....1..function.x..length.which.x....0... > 10,]
 goi<-rownames(coef_filter)
-
+saveRDS(goi,"GOI-Lung cancer vs. others.rds")
 ggplot(coef_filter, aes(x=apply.coef..1.....1..function.x..length.which.x....0...)) + 
-  geom_histogram(color="black", fill="gray") + labs(x="Frequency of non-zero coefficient",y="cfRNA of interest",title="LC vs. Non-LC")+
+  geom_histogram(color="black", fill="gray") + labs(x="Frequency of non-zero coefficient in 100 tests",y="# Gene of interest",title="LC vs. Non-LC")+
   theme_classic()+theme(axis.text = element_text(colour = "black",size = 10),plot.title = element_text(hjust=0.5,face = "bold",size = 14), 
-                        axis.title = element_text(size = 10), panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5))+
-  annotate(geom="text", x=50, y=12, label="51 goi cfRNA",color="black",size=4)
+                        axis.title = element_text(size = 10), panel.border = element_rect(colour = "black", fill=NA, linewidth=0.5))
 ggsave(paste0("Histogram for LASSO coef distribution.pdf"), width = 4, height = 6)
 ggsave(paste0("Histogram for LASSO coef distribution.png"), width = 4, height = 6, bg="white")
 
@@ -96,13 +95,20 @@ goi_list<-list()
 for (RNA in names(RNA_name)) {
   goi_list[[RNA]]<-goi[(goi %in% RNA_name[[RNA]])]
 }
-goi_list[["cfRNA"]]<-c(goi_list[["msRNA"]],goi_list[["miRNA"]],goi_list[["snRNA"]],goi_list[["snoRNA"]],goi_list[["tsRNA"]])
+goi_list[["cfRNA"]]<-c(goi_list[["mRNA"]],goi_list[["miRNA"]],goi_list[["snRNA"]],goi_list[["snoRNA"]],goi_list[["tsRNA"]])
 goi_list<-Filter(function(x) length(x) > 0, goi_list)
-orderd_name<-c("cfRNA","msRNA","miRNA","snRNA","snoRNA","tsRNA")
+orderd_name<-c("cfRNA","mRNA","miRNA","snRNA","snoRNA","tsRNA")
 goi_list<- goi_list[match(orderd_name, names(goi_list))]
 saveRDS(goi_list,"goi_list_Lung cancer vs. Non-Lung cancer.rds")
-
+writeLines(goi_list[["cfRNA"]],"Lung cancer vs. Non-Lung cancer.txt")
+dir.create(paste0(getwd(),"/goi"), showWarnings = FALSE)
+for (RNA in names(goi_list)) {
+  GOI=goi_list[[RNA]]
+  if (length(GOI)==0) next
+  writeLines(GOI,paste0("goi/",RNA," name.txt"))
+}
 ####Machine learning----
+dis_type<-factor(dis_type,levels=c("Cases","Controls"))
 ML<-list()
 seeds<-1:100 #repeat 100 times
 for (RNA in names(goi_list)) {
@@ -314,7 +320,7 @@ plot<-ggplot(df_median, aes(x=actual, y=df_discovery_median)) + geom_boxplot(out
                         axis.line = element_line(linewidth=0.15))
 ggsave(paste0("Lung cancer median risk score boxplot by group.pdf"), width = 4, height = 4, units="cm")
 ggsave(paste0("Lung cancer median risk score boxplot by group.png"), width = 4, height = 4, units="cm", bg="white")
-
+saveRDS(df_median,'LC-Discovery cohort risk scores.rds')
 
 ##Risk score validation----
 seeds<-1:100
@@ -347,18 +353,3 @@ df_validation<-data.frame(id=rownames(validation_x),prob_result,row.names = rown
 df_validation_median<-apply(df_validation[,-1], 1, median)
 df_validation_median<-sort(df_validation_median)
 saveRDS(df_validation_median,"Validation_LC_risk_score.rds")
-# df_validation_plot<-melt(df_validation,"id")
-# df_validation_plot$id<-factor(df_validation_plot$id,levels = names(df_validation_median))
-# df_validation_plot$actual=substr(df_validation_plot$id,1,3)
-# df_validation_plot$actual=gsub("_","",df_validation_plot$actual)
-# df_validation_plot$actual=gsub("LC","Lung cancer (N=26)",df_validation_plot$actual)
-# df_validation_plot$actual=gsub("NOR","Cancer-free (N=27)",df_validation_plot$actual)
-# df_validation_plot$actual=factor(df_validation_plot$actual,levels = c("Cancer-free (N=27)","Lung cancer (N=26)"))
-# validation_plot<-ggplot(df_validation_plot, aes(x=id, y=value,color=actual)) + geom_boxplot(outlier.size = 0.1)+ scale_colour_manual(values=c("#4E62AB","#D6404E"))+
-#   labs(x=paste0("Study subjects (N=",length(validation_y),")"), y="Lung cancer risk score")+ geom_hline(yintercept=0.5, linetype="dashed", color = "black") +
-#   theme_classic()+theme(axis.text.x = element_blank(), axis.text.y = element_text(colour = "black"), text = element_text(size = 14), 
-#                         panel.border = element_rect(colour = "black", fill=NA, linewidth=1), 
-#                         legend.position = c(0.18, 0.78), legend.title = element_blank(),legend.background = element_blank())
-# validation_plot
-# ggsave(paste0("Lung cancer vs. Non-Lung cancer-validation-logistic regression.pdf"), width = 8, height = 4)
-# ggsave(paste0("Lung cancer vs. Non-Lung cancer-validation-logistic regression.png"), width = 8, height = 4, bg="white")
