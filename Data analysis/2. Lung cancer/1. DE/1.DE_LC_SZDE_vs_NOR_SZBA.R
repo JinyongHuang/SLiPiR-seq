@@ -11,7 +11,7 @@ library(foreach)#multi-core to save time
 library(doParallel)#multi-core to save time
 
 ####Sample ID----
-meta <- read.csv("../../Metadata/Meta_with_clinical_and_Summary_used_samples_20230829.csv", header = T)
+meta <- read.csv("../../Metadata/Meta_with_clinical_and_Summary_used_samples.csv", header = T)
 meta <- subset(meta,sample_type=="LC_SZDE" | sample_type=="NOR_SZBA")
 case="Lung cancer"
 control="Healthy"
