@@ -34,9 +34,9 @@ RNA_name <- list.files(path = "../../../Normalization_RPM_colsum/", pattern = "c
 RNA_name <- RNA_name[grep("cfRNA",RNA_name, invert = TRUE)]
 RNA_name <- lapply(RNA_name, read.table, header=TRUE, sep="\t",row.names=1)
 RNA_name <- lapply(RNA_name, row.names)
-names(RNA_name)<- c("lsRNA",  "miRNA",  "msRNA",  "piRNA",  "rsRNA",  "snoRNA", "snRNA",  "tsRNA",  "ysRNA")
-sig_cfRNA<-read.table("../../DE_vsHealthy/DESeq2 significant results/LC_SE vs. NOR_SB/DESeq2 significant results-cfRNA-Lung cancer vs. Healthy.txt", header = T)
-sig_cfRNA<-sig_cfRNA[sig_cfRNA$padj < 0.01 & sig_cfRNA$baseMean>=10 & sig_cfRNA$log2FoldChange>=1,]
+names(RNA_name)<- c("lncRNA",  "miRNA",  "mRNA",  "piRNA",  "rsRNA",  "snoRNA", "snRNA",  "tsRNA",  "ysRNA")
+sig_cfRNA<-read.table("../../DE_LC_SZDE_vs_NOR_SZBA/DESeq2 candidate results-cfRNA-Lung cancer vs. Healthy.txt", header = T)
+sig_cfRNA<-sig_cfRNA[sig_cfRNA$log2FoldChange>=0,]
 sig_list<-list()
 Distribution<-double()
 for (RNA in names(RNA_name)) {
@@ -47,8 +47,8 @@ sum(Distribution)
 
 ####Data for machine learning----
 cfRNA<-read.table("../../../Normalization_RPM_colsum/cfRNA-log2(cpm).txt", header = T, row.names = 1)
-msRNA<-cfRNA[sig_list[["msRNA"]],meta$ID]
-lsRNA<-cfRNA[sig_list[["lsRNA"]],meta$ID]
+mRNA<-cfRNA[sig_list[["mRNA"]],meta$ID]
+lncRNA<-cfRNA[sig_list[["lncRNA"]],meta$ID]
 miRNA<-cfRNA[sig_list[["miRNA"]],meta$ID]
 piRNA<-cfRNA[sig_list[["piRNA"]],meta$ID]
 tsRNA<-cfRNA[sig_list[["tsRNA"]],meta$ID]
@@ -56,16 +56,17 @@ rsRNA<-cfRNA[sig_list[["rsRNA"]],meta$ID]
 ysRNA<-cfRNA[sig_list[["ysRNA"]],meta$ID]
 snRNA<-cfRNA[sig_list[["snRNA"]],meta$ID]
 snoRNA<-cfRNA[sig_list[["snoRNA"]],meta$ID]
-RNA_list<-list(msRNA=msRNA,lsRNA=lsRNA,miRNA=miRNA,piRNA=piRNA,tsRNA=tsRNA,snRNA=snRNA,snoRNA=snoRNA,rsRNA=rsRNA,ysRNA=ysRNA)
+RNA_list<-list(mRNA=mRNA,lncRNA=lncRNA,miRNA=miRNA,piRNA=piRNA,tsRNA=tsRNA,snRNA=snRNA,snoRNA=snoRNA,rsRNA=rsRNA,ysRNA=ysRNA)
 
 ####Machine learning general
-seeds<-1:20 #repeat 20 times
+seeds<-1:100 #repeat 100 times
 ####Ridge logistic regression----
 registerDoParallel(cl<-makeCluster(10))
 LR_result<-list()
 for (RNA in names(RNA_list)) {
   subset<-RNA_list[[RNA]]
   goi<-c(2:nrow(subset))
+  if (nrow(subset)>1000) {goi<-seq(2,nrow(subset),10)}#rsRNA
   result_goi<-data.frame(AUC_training_mean=rep(0,length(goi)),AUC_testing_mean=rep(0,length(goi)),
                          AUC_training_sd=rep(0,length(goi)),AUC_testing_sd=rep(0,length(goi)),
                          row.names = goi)
@@ -112,6 +113,7 @@ RF_result<-list()
 for (RNA in names(RNA_list)) {
   subset<-RNA_list[[RNA]]
   goi<-c(2:nrow(subset))
+  if (nrow(subset)>1000) {goi<-seq(2,nrow(subset),10)}#rsRNA
   result_goi<-data.frame(AUC_training_mean=rep(0,length(goi)),AUC_testing_mean=rep(0,length(goi)),
                          AUC_training_sd=rep(0,length(goi)),AUC_testing_sd=rep(0,length(goi)),
                          row.names = goi)
@@ -157,6 +159,7 @@ SVM_result<-list()
 for (RNA in names(RNA_list)) {
   subset<-RNA_list[[RNA]]
   goi<-c(2:nrow(subset))
+  if (nrow(subset)>1000) {goi<-seq(2,nrow(subset),10)}#rsRNA
   result_goi<-data.frame(AUC_training_mean=rep(0,length(goi)),AUC_testing_mean=rep(0,length(goi)),
                          AUC_training_sd=rep(0,length(goi)),AUC_testing_sd=rep(0,length(goi)),
                          row.names = goi)
@@ -207,7 +210,10 @@ for (RNA in names(RNA_list)) {
   topn_df<-data.frame(LR_training=LR_result[[RNA]]$AUC_training_mean,LR_testing=LR_result[[RNA]]$AUC_testing_mean,
                       RF_training=RF_result[[RNA]]$AUC_training_mean,RF_testing=RF_result[[RNA]]$AUC_testing_mean,
                       SVM_training=SVM_result[[RNA]]$AUC_training_mean,SVM_testing=SVM_result[[RNA]]$AUC_testing_mean,
-                      topN=2:goi)
+                      topN=NA)
+  if (RNA!="rsRNA") {topn_df$topN<-2:goi}
+  if (RNA=="rsRNA") {topn_df$topN<-seq(2,goi,10)}#rsRNA
+  
   topn_df$mean<-apply(topn_df[,-7],1,mean)
   topn_df$Training_mean<-apply(topn_df[,c(1,3,5)],1,mean)  
   topn_df$Testing_mean<-apply(topn_df[,c(2,4,6)],1,mean)  
@@ -450,10 +456,7 @@ publication[7,]<-Summary$AUC_validation[seq(1,nrow(Summary),3)]
 publication[8,]<-Summary$AUC_validation[seq(2,nrow(Summary),3)]
 publication[9,]<-Summary$AUC_validation[seq(3,nrow(Summary),3)]
 publication[10,]<-nFiltered
-publication<-publication[,c("msRNA",  "lsRNA",  "miRNA",  "piRNA",  
+publication<-publication[,c("mRNA",  "lncRNA",  "miRNA",  "piRNA",  
                             "snRNA",  "snoRNA", "tsRNA",  "rsRNA",  "ysRNA")]
 
 write.csv(publication,"Top N selected AUC summary.csv")
-
-# ####median and IQR
-summary(Best[["snoRNA"]][201:300,"AUC_validation"]) #Top N selected snoRNA in SVM
