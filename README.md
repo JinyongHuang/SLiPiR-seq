@@ -13,12 +13,12 @@ R packages:  tidyverse (version 2.0.0); ggpubr (version 0.6.0); ggplot2 (version
 ```./Data processing/3. RNA read count calling.sh```
 4.	Quality control and normalization.\
 ```Rscript ./Data analysis/1.Quality control and normalization/1.Raw read counts.R ```\
-```Rscript ./Data analysis/1.Quality control and normalization/2.Quality control.R ```\
-```Rscript ./Data analysis/1.Quality control and normalization/3.Normalization-RPM-colsum.R ```
+```Rscript ./Data analysis/1.Quality control and normalization/2.Normalization-RPM-colsum.R ```
 5.	Case and control study – One cancer type\
 Differential expression analysis:\
 ```Rscript ./Data analysis/2.Lung cancer/1.DE/1.DE_LC_SZDE_vs_NOR_SZBA.R```\
 ```Rscript ./Data analysis/2.Lung cancer/1.DE/2.Candidates_reads_boxplot.R```\
+```Rscript ./Data analysis/2.Lung cancer/1.DE/2.Heatmap.R```\
 Feature selection:\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/1.Feature selection-Boruta.R```\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/1.Feature selection-LASSO.R```\
@@ -30,6 +30,20 @@ Machine learning analysis:\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/3.Combination test.R```\
 ```Rscript ./Data analysis/2.Lung cancer/2.Machine learning/4.Best combination.R```
 6.	Case and control study – Multiple cancer types.\
-Same as above.
-
-
+Differential expression analysis:\
+```Rscript ./Data analysis/3.Multiple cancer types/1.DE/DE_BRC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/1.DE/DE_CRC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/1.DE/DE_GC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/1.DE/DE_HCC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/1.DE/DE_LC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/1.DE/DE_cancers_vs._cancerfree.R```\
+Machine learning analysis:\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/ML_BRC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/ML_CRC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/ML_GC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/ML_HCC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/ML_LC_vs._others.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/ML_cancers_vs._cancerfree.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/Heatmap.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/tsne.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/Validation cohort.R```\
