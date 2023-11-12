@@ -46,4 +46,4 @@ Machine learning analysis:\
 ```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/ML_cancers_vs._cancerfree.R```\
 ```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/Heatmap.R```\
 ```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/tsne.R```\
-```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/Validation cohort.R```\
+```Rscript ./Data analysis/3.Multiple cancer types/2.Machine learning/Validation cohort.R```
